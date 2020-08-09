@@ -9,6 +9,26 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin')
 const portfinder = require('portfinder')
+const axios = require('axios')
+
+const vueAxios = axios.create({
+  headers:{
+    origin:'https://y.qq.com/',
+    'sec-fetch-site':'same-site',
+    'access-control-allow-origin':'https://y.qq.com',
+    'access-control-expose-headers':'Area',
+    referer:'https://c.y.qq.com/'
+  },
+  timeout:3000
+})
+
+const sendAxiosAjax = (url,params) => {
+  return Promise.resolve(
+    vueAxios.get(url,{
+      params
+    })
+    )
+}
 
 const HOST = process.env.HOST
 const PORT = process.env.PORT && Number(process.env.PORT)
@@ -42,6 +62,17 @@ const devWebpackConfig = merge(baseWebpackConfig, {
     quiet: true, // necessary for FriendlyErrorsPlugin
     watchOptions: {
       poll: config.dev.poll,
+    },
+    before(app){
+      app.get('/getRecomSlider',(req,res) => {
+        sendAxiosAjax('https://u.y.qq.com/cgi-bin/musicu.fcg',req.query)
+        .then(response => {
+          return res.json(response.data)
+        })
+        .catch(e =>{
+           console.log(e)
+        })
+      })
     }
   },
   plugins: [
